@@ -1,0 +1,9 @@
+Cache Config
+Copyright (C) 2007-2011 Cycle Computing, LLC.
+
+This source code is covered by the Apache License, Version 2.0, which
+can be found in the accompanying LICENSE-2.0.txt file, or online at
+http://www.apache.org/licenses/LICENSE-2.0.txt .
+
+This product includes software developed at
+Cycle Computing, LLC. (http://www.cyclecomputing.com/).

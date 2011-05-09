@@ -18,11 +18,11 @@
 #
 ################################################################################
 
-VERSION=`sed -n -e 's/VERSION = "\(.*\)"/\1/p' cycle_agent.py | tr -d '\r'`
+VERSION=`sed -n -e 's/VERSION = "\(.*\)"/\1/p' condor_agent.py | tr -d '\r'`
 
-echo "Building version $VERSION of CycleAgent..."
+echo "Building version $VERSION of Condor Agent..."
 
-BUILD_DIR=build/cycle_agent
+BUILD_DIR=build/condor_agent
 DIST_DIR=dist/packages
 
 if [ -e $DIST_DIR ]; then
@@ -56,15 +56,15 @@ prep_build() {
 ## Native python build
 prep_build
 
-cp cycle_agent $BUILD_DIR
-cp cycle_agent.py $BUILD_DIR
-mkdir $BUILD_DIR/CycleAgent
-cp CycleAgent/*.py $BUILD_DIR/CycleAgent
+cp condor_agent $BUILD_DIR
+cp condor_agent.py $BUILD_DIR
+mkdir $BUILD_DIR/CondorAgent
+cp CondorAgent/*.py $BUILD_DIR/CondorAgent
 
-FILE=cycle_agent_$VERSION.python.tar.gz
+FILE=condor_agent_$VERSION.python.tar.gz
 
 cd build
-tar czf $FILE cycle_agent
+tar czf $FILE condor_agent
 cd ..
 
 mv build/$FILE $DIST_DIR
@@ -77,16 +77,16 @@ prep_build
 # get the latest modification time for any py file
 LAST_MOD=`find . -name '*.py' -exec $STAT {} \; | sort -n -r | head -1`
 # get the modification time for the EXE
-EXE_MOD=`$STAT dist/cycle_agent.exe`
+EXE_MOD=`$STAT dist/condor_agent.exe`
 
 if [ "$EXE_MOD" -lt "$LAST_MOD" ] ; then
-    echo "ERROR: CycleAgent.exe appears to be out of date. Please run build.bat on Windows to create a new EXE."
+    echo "ERROR: condor_agent.exe appears to be out of date. Please run build.bat on Windows to create a new EXE."
     exit 1
 fi
 
 cp dist/*.exe $BUILD_DIR
 
-FILE=cycle_agent_$VERSION.win32.zip
+FILE=condor_agent_$VERSION.win32.zip
 
 
 # Verify that we have the 7zip tool
@@ -98,7 +98,7 @@ if [ -z "$ZIP" ]; then
 fi
 
 cd build
-$ZIP a -bd -tzip $FILE cycle_agent
+$ZIP a -bd -tzip $FILE condor_agent
 cd ..
 
 mv build/$FILE $DIST_DIR

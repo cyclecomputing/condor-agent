@@ -19,5 +19,5 @@
 ################################################################################
 
 DIR=`dirname $0`
-python $DIR/cycle_agent.py
+python $DIR/condor_agent.py
 

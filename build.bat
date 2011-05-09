@@ -21,10 +21,10 @@ REM ############################################################################
 REM This creates the EXE, which must be done on Windows, so it is checked in.
 REM Run build.sh on Unix after running this on Windows to create the packages.
 
-del dist\cycle_agent.exe
+del dist\condor_agent.exe
 setup.py py2exe
 
 echo.
 echo.
-echo Windows version of CycleAgent built successfully.
+echo Windows version of Condor Agent built successfully.
 echo Now run build.sh (on Unix) to create the archive packages.

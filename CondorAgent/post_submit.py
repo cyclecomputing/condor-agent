@@ -36,6 +36,8 @@ import util
 import pickle
 import logging
 import urllib
+import string
+import CondorAgent.util
 
 ################################################################################
 # GLOBALS
@@ -173,6 +175,18 @@ def doCondorSubmit(submitFile, queueName):
     if queueName:
         submit_cmd.append('-name')
         submit_cmd.append('%s' % queueName)
+    # Case 7108: Add a new configuration option that allows users to pass along custom command
+    # line arguments to insert in to the condor_submit call made by Condor Agent.
+    # The syntax for the option is a comma-seperated list. With each value in the list being
+    # an element in the command line argument
+    additional_arguments = []
+    add_str = CondorAgent.util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_PROXY_ADDITIONAL_ARGUMENTS')
+    if add_str:
+        # Add cleaned up versions of the arguments to our array
+        additional_arguments = [string.strip(i) for i in string.split(add_str, ',')]
+    if len(additional_arguments) > 0:
+        logging.debug("CondorAgent.post_submit.doCondorSubmit(): Adding additional, user supplied arguments: %s" % ' '.join(additional_arguments))
+        submit_cmd.extend(additional_arguments)
     submit_cmd.append('%s' % submitFile)
     logging.debug("CondorAgent.post_submit.doCondorSubmit(): condor_submit command: %s" % ' '.join(submit_cmd))
     

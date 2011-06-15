@@ -18,7 +18,7 @@
 #
 ################################################################################
 
-VERSION=`sed -n -e 's/VERSION = "\(.*\)"/\1/p' condor_agent.py | tr -d '\r'`
+VERSION=`sed -n -e 's/__version__ = "\(.*\)"/\1/p' condor_agent.py | tr -d '\r'`
 
 echo "Building version $VERSION of Condor Agent..."
 

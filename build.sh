@@ -45,12 +45,10 @@ else
     STAT="stat -c %Y "
 fi
 
-
-
 prep_build() {
     rm -rf build
     mkdir -p  $BUILD_DIR
-    cp README $BUILD_DIR
+    cp README.txt $BUILD_DIR
 }
 
 ## Native python build
@@ -71,34 +69,51 @@ mv build/$FILE $DIST_DIR
 
 #### Windows
 
+BUILD_WINDOWS=1
+
 prep_build
 
-
-# get the latest modification time for any py file
-LAST_MOD=`find . -name '*.py' -exec $STAT {} \; | sort -n -r | head -1`
-# get the modification time for the EXE
-EXE_MOD=`$STAT dist/condor_agent.exe`
-
-if [ "$EXE_MOD" -lt "$LAST_MOD" ] ; then
-    echo "ERROR: condor_agent.exe appears to be out of date. Please run build.bat on Windows to create a new EXE."
-    exit 1
+if [ ! -f dist/condor_agent.exe ];
+then
+    echo "Warning: Missing dist/condor_agent.exe -- skipping Windows package build"
+    echo "         Run build.bat on a Windows machine if you want to build the Windows package"
+    BUILD_WINDOWS=0
 fi
 
-cp dist/*.exe $BUILD_DIR
+if [ $BUILD_WINDOWS -eq 1 ];
+then
 
-FILE=condor_agent_$VERSION.win32.zip
+    # get the latest modification time for any py file
+    LAST_MOD=`find . -name '*.py' -exec $STAT {} \; | sort -n -r | head -1`
+    # get the modification time for the EXE
+    EXE_MOD=`$STAT dist/condor_agent.exe`
+
+    if [ "$EXE_MOD" -lt "$LAST_MOD" ] ; then
+        echo "ERROR: condor_agent.exe appears to be out of date. Please run build.bat on Windows to create a new EXE."
+        exit 1
+    fi
+
+    cp dist/*.exe $BUILD_DIR
+
+    FILE=condor_agent_$VERSION.win32.zip
 
 
-# Verify that we have the 7zip tool
-export ZIP=`which 7za`
-if [ -z "$ZIP" ]; then
-    echo "ERROR: Unable to find the 7zip compression tool." >&2
-    echo "Try \"port install p7zip\" or \"yum install p7zip\" depending on your OS." >&2
-    exit 1
+    # Verify that we have the 7zip tool
+    export ZIP=`which 7za`
+    if [ -z "$ZIP" ]; then
+        echo "ERROR: Unable to find the 7zip compression tool." >&2
+        echo "Try \"port install p7zip\" or \"yum install p7zip\" depending on your OS." >&2
+        exit 1
+    fi
+
+    cd build
+    $ZIP a -bd -tzip $FILE condor_agent
+    cd ..
+
+    mv build/$FILE $DIST_DIR
+
 fi
 
-cd build
-$ZIP a -bd -tzip $FILE condor_agent
-cd ..
+rm -rf build
 
-mv build/$FILE $DIST_DIR
+echo "Build complete"

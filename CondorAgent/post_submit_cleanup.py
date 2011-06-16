@@ -76,12 +76,12 @@ class LocalSubmitCleaner(threading.Thread):
         # TODO Should we context switch to CONDOR_IDS automatically if we're root?
         
         while not self._stopevent.isSet():
-            submitDir = util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_DIR')
+            submitDir = util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_DIR').replace('"', '')
             if submitDir == '':
                 logging.error('[cleaner] Could not find a CONDOR_AGENT_SUBMIT_DIR setting for this host -- no cleanup performed')
                 return(1)
             logging.info('[cleaner] Scanning submit directory \'%s\' for *.cluster files...' % submitDir)
-            for c in self._locate('*.cluster', submitDir):
+            for c in self._locate(pattern='*.cluster', root=submitDir):
                 # I never want this thread to exit because of an exception so we'll blanket trap
                 # everything at this level and just report it back as an error.
                 try:
@@ -141,10 +141,12 @@ class LocalSubmitCleaner(threading.Thread):
         '''Returns the number of jobs still in the queue for a cluster.'''
         jobCount = None
         # condor_q -name q1@`hostname` -f "%d\n" ClusterID 11292
+        # We don't care if jobs are in the queue in the C or X state. So filter
+        # those out with a constraint.
         if cdata.get('queue'):
-            cmd = ['condor_q', '-name', cdata.get('queue'), '-f', '"%d\\n"', 'ClusterID', cdata.get('clusterid')]
+            cmd = ['condor_q', '-name', cdata.get('queue'), '-f', '"%d\\n"', 'ClusterID', '-c', 'JobStatus != 3 && JobStatus != 4', cdata.get('clusterid')]
         else:
-            cmd = ['condor_q', '-f', '"%d\\n"', 'ClusterID', cdata.get('clusterid')]
+            cmd = ['condor_q', '-f', '"%d\\n"', 'ClusterID', '-c', 'JobStatus != 3 && JobStatus != 4', cdata.get('clusterid')]
         logging.info('[cleaner] ...running: %s' % ' '.join(cmd))
         (return_code, stdout_value, stderr_value) = util.runCommand2(' '.join(cmd))
         if return_code == 0:

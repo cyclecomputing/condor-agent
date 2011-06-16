@@ -101,7 +101,7 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
     def __init__(self, request, client_address, server):
         # Fetch configuration information from Condor
         self.submitDir = None
-        self.submitDir = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR")
+        self.submitDir = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR").replace('"', '')
         if not self.submitDir or self.submitDir == '':
             self.submitDir = os.path.join(os.getcwd(), "submit")
             if not os.path.isdir(self.submitDir):

@@ -88,7 +88,7 @@ class ScheddQuery:
         if len(history_file.strip()) == 0 :
             raise Exception("The HISTORY setting is an empty string")
         logging.info("History file for daemon %s: %s"%(self.scheddName, history_file))
-        files        = glob.glob(history_file + "*")
+        files        = mglob.expand(history_file + "*")
         history_data = ''
         for file in files:
             mod = os.path.getmtime(file)

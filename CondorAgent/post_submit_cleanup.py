@@ -144,7 +144,7 @@ class LocalSubmitCleaner(threading.Thread):
         # We don't care if jobs are in the queue in the C or X state. So filter
         # those out with a constraint.
         if cdata.get('queue'):
-            cmd = ['condor_q', '-name', cdata.get('queue'), '-f', '"%d\\n"', 'ClusterID', '-c', 'JobStatus != 3 && JobStatus != 4', cdata.get('clusterid')]
+            cmd = ['condor_q', '-name', cdata.get('queue'), '-f', '"%d\\n"', 'ClusterID', '-c', '"JobStatus != 3 && JobStatus != 4"', cdata.get('clusterid')]
         else:
             cmd = ['condor_q', '-f', '"%d\\n"', 'ClusterID', '-c', 'JobStatus != 3 && JobStatus != 4', cdata.get('clusterid')]
         logging.info('[cleaner] ...running: %s' % ' '.join(cmd))

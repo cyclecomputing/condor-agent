@@ -104,11 +104,12 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
         self.submitDir = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR").replace('"', '')
         if not self.submitDir or self.submitDir == '':
             self.submitDir = os.path.join(os.getcwd(), "submit")
-            if not os.path.isdir(self.submitDir):
-                os.makedirs(self.submitDir)
             logging.warning('Unable to find a defined submit directory in the Condor configuration. Using directory: %s' % self.submitDir)
         else:
             logging.info("Retrieved submit directory '%s'" % self.submitDir)
+        if not os.path.isdir(self.submitDir):
+            logging.warning('Unabled to find submit directory %s -- attempting to create it now...' % self.submitDir)
+            os.makedirs(self.submitDir)        
         
         # List of URL handlers
         # URL handlers take the match_object as input
@@ -187,7 +188,25 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
         logging.debug("Response complete.")
     
     def submit(self, match_obj):
-        CondorAgent.post_submit.do_submit(self, self.submitDir)
+        accepts_gzip = self.requestAcceptsGZip()
+        data = CondorAgent.post_submit.do_submit(self, self.submitDir)
+        if accepts_gzip:
+            logging.debug("Agent returning gzipped data.")
+            data = CondorAgent.util.gzipBuffer(data)
+        else:
+            logging.debug("Agent returning uncompressed response data.")
+        logging.debug("Sending response to client.")
+        self.send_response(200)
+        logging.debug("Sending headers.")
+        if accepts_gzip:
+            self.send_header('Content-Encoding', 'gzip')
+            self.send_header('Content-Length', len(data))
+        self.send_header('Content-Type', 'text/plain')
+        self.send_header('Cache-Control', 'no-cache')
+        self.end_headers()
+        logging.debug("Sending response body.")
+        self.wfile.write(data)
+        logging.debug("Response complete.")
     
     def getUnrecognizedURL(self, match_obj):
         self.send_response(404)

@@ -37,6 +37,7 @@ import pickle
 import logging
 import urllib
 import string
+import shutil
 import CondorAgent.util
 
 ################################################################################
@@ -183,7 +184,7 @@ def doCondorSubmit(submitFile, queueName):
     add_str = CondorAgent.util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_PROXY_ADDITIONAL_ARGUMENTS')
     if add_str:
         # Add cleaned up versions of the arguments to our array
-        additional_arguments = [string.strip(i) for i in string.split(add_str, ',')]
+        additional_arguments = [i.strip() for i in string.split(add_str, ',')]
     if len(additional_arguments) > 0:
         logging.debug("CondorAgent.post_submit.doCondorSubmit(): Adding additional, user supplied arguments: %s" % ' '.join(additional_arguments))
         submit_cmd.extend(additional_arguments)
@@ -203,6 +204,7 @@ def doCondorSubmit(submitFile, queueName):
             logging.error("CondorAgent.post_submit.doCondorSubmit(): submit_err: %s" % submit_err)
         os.umask(current_umask)
         os.chdir(currentDir)
+        cleanSubmissionDir(basedir)
         raise
     os.umask(current_umask)
     os.chdir(currentDir)
@@ -213,15 +215,47 @@ def doCondorSubmit(submitFile, queueName):
         match = re.search("submitted to cluster (\\d+)", submit_out)
         if match == None:
             logging.error('CondorAgent.post_submit.doCondorSubmit(): Unable to parse submission details from condor_q output')
+            cleanSubmissionDir(basedir)
             raise Exception("Failed to parse cluster id from output:\n%s" % submit_out)
         cluster = match.group(1)
     else:
         # TODO: parse the error to figure out what happened.
         logging.error('CondorAgent.post_submit.doCondorSubmit(): Condor submission failed')
+        cleanSubmissionDir(basedir)
         raise Exception("Failed to submit jobs to condor with error:\n%s" % submit_err)
     logging.info('CondorAgent.post_submit.doCondorSubmit(): Returning cluster ID: %s' % str(cluster))
     return cluster
 
+def cleanSubmissionDir(submission_dir):
+    '''
+    Cleans up after a failed submission attempt so disk pollution does not get
+    so bad. Does some minimal checking on submission_dir to make sure it
+    does not do something stupid like delete / or something like that.
+    '''
+    submit_dir_expected_prefix = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR").replace('"', '')
+    if submit_dir_expected_prefix and submit_dir_expected_prefix != '' and len(submit_dir_expected_prefix) > 3:
+        # That's a bit of a lame check, >3 -- it could be better. On !Windows it should suffice to
+        # stop someone from accidentally removing /. On Windows it should suffice to stop someone
+        # from accidentally removing something like C:\. In truth this path should always be longer
+        # than 3 characters...so for now we'll say it's good enough.
+        # TODO Improve the safety checks before we try to delete things off of disk
+        if submission_dir.find(submit_dir_expected_prefix) > -1:
+            # We will trust that the user wasn't stupid enough to use / as their
+            # submission dir.
+            if os.path.isdir(submission_dir):
+                logging.info('Cleaning up directory %s after failed submission' % submission_dir)
+                try:
+                    shutil.rmtree(submission_dir)
+                except Exception, e:
+                    logging.error('Unable to clean up %s after failed submission: %s' % (submission_dir, str(e)))
+            else:
+                logging.warning('Skipped cleanup of %s after failed submission, path is not a directory' % submission_dir)
+        else:
+            logging.warning('Skipped cleanup of %s after failed submission, path does not start with expected string "%s"' % (submission_dir, submit_dir_expected_prefix))
+    else:
+        logging.warning('Skipped cleanup of %s after failed submission, we do not trust submit directory prefix "%s"' % submit_dir_expected_prefix)
+
+        
 
 if __name__ == '__main__':
     pass

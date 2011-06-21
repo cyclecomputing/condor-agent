@@ -59,7 +59,7 @@ cp condor_agent.py $BUILD_DIR
 mkdir $BUILD_DIR/CondorAgent
 cp CondorAgent/*.py $BUILD_DIR/CondorAgent
 
-FILE=condor_agent_$VERSION.python.tar.gz
+FILE=condor_agent-$VERSION-python.tar.gz
 
 cd build
 tar czf $FILE condor_agent
@@ -95,7 +95,7 @@ then
 
     cp dist/*.exe $BUILD_DIR
 
-    FILE=condor_agent_$VERSION.win32.zip
+    FILE=condor_agent-$VERSION-win32.zip
 
 
     # Verify that we have the 7zip tool

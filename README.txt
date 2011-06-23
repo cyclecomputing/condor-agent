@@ -74,9 +74,15 @@ You can verify the agent is running on this box using curl:
 
 This should return output similar to a `condor_q -l` call.
 
-If you're running a CycleServer instance, it will detect the agent's presence on this scheduling
+If you're running a CycleServer instance version 4.0.3 or earlier you will need to add some additional
+Condor configuration in order for CycleServer to detect the agent's presence on this scheduling
 node and being to fetch job and history information from this node using the CondorAgent after two
 polling intervals have completed.
+
+Add the following configuration in the case where CycleServer is in use:
+
+	CYCLE_AGENT_PORT = $(CONDOR_AGENT_PORT)
+	SCHEDD_ATTRS = CYCLE_AGENT_PORT, $(SCHEDD_ATTRS)
 
 To enable access to historical job information via CondorAgent we recommend the following Condor
 settings:

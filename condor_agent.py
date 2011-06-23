@@ -188,25 +188,16 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
         logging.debug("Response complete.")
     
     def submit(self, match_obj):
-        accepts_gzip = self.requestAcceptsGZip()
         data = CondorAgent.post_submit.do_submit(self, self.submitDir)
-        if accepts_gzip:
-            logging.debug("Agent returning gzipped data.")
-            data = CondorAgent.util.gzipBuffer(data)
-        else:
-            logging.debug("Agent returning uncompressed response data.")
+        if not data:
+            raise Exception('Encountered an unknown error submitting job, no cluster ID was returned')
         logging.debug("Sending response to client.")
         self.send_response(200)
-        logging.debug("Sending headers.")
-        if accepts_gzip:
-            self.send_header('Content-Encoding', 'gzip')
-            self.send_header('Content-Length', len(data))
         self.send_header('Content-Type', 'text/plain')
         self.send_header('Cache-Control', 'no-cache')
         self.end_headers()
-        logging.debug("Sending response body.")
-        self.wfile.write(data)
-        logging.debug("Response complete.")
+        logging.debug("Sending response body: %s" % str(data))
+        self.wfile.write("%s\n" % str(data))
     
     def getUnrecognizedURL(self, match_obj):
         self.send_response(404)

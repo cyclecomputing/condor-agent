@@ -147,12 +147,7 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
         fp.close()
         logging.debug('Cluster details dumped successfully')
     
-    
-    handler.send_response(200)
-    handler.send_header('Content-type', 'text/plain')
-    handler.end_headers()
-    # TODO - remove the newline at the end.
-    handler.wfile.write(str(clusterId) + "\n")
+    return clusterId
 
 
 def locate(pattern, root=os.curdir):
@@ -165,7 +160,7 @@ def locate(pattern, root=os.curdir):
 
 def doCondorSubmit(submitFile, queueName):
     currentDir = os.getcwd()
-    cluster = None
+    clusterId = None
     # Change to the Condor directory
     (basedir, filename) = os.path.split(submitFile)
     os.chdir(basedir)
@@ -217,14 +212,14 @@ def doCondorSubmit(submitFile, queueName):
             logging.error('CondorAgent.post_submit.doCondorSubmit(): Unable to parse submission details from condor_q output')
             cleanSubmissionDir(basedir)
             raise Exception("Failed to parse cluster id from output:\n%s" % submit_out)
-        cluster = match.group(1)
+        clusterId = match.group(1)
     else:
         # TODO: parse the error to figure out what happened.
         logging.error('CondorAgent.post_submit.doCondorSubmit(): Condor submission failed')
         cleanSubmissionDir(basedir)
         raise Exception("Failed to submit jobs to condor with error:\n%s" % submit_err)
-    logging.info('CondorAgent.post_submit.doCondorSubmit(): Returning cluster ID: %s' % str(cluster))
-    return cluster
+    logging.info('CondorAgent.post_submit.doCondorSubmit(): Returning cluster ID: %s' % str(clusterId))
+    return clusterId
 
 def cleanSubmissionDir(submission_dir):
     '''

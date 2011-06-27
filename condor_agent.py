@@ -99,18 +99,7 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
     '''Used to handle RESTful calls to this agent made over HTTP.'''
     
     def __init__(self, request, client_address, server):
-        # Fetch configuration information from Condor
         self.submitDir = None
-        self.submitDir = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR").replace('"', '')
-        if not self.submitDir or self.submitDir == '':
-            self.submitDir = os.path.join(os.getcwd(), "submit")
-            logging.warning('Unable to find a defined submit directory in the Condor configuration. Using directory: %s' % self.submitDir)
-        else:
-            logging.info("Retrieved submit directory '%s'" % self.submitDir)
-        if not os.path.isdir(self.submitDir):
-            logging.warning('Unabled to find submit directory %s -- attempting to create it now...' % self.submitDir)
-            os.makedirs(self.submitDir)        
-        
         # List of URL handlers
         # URL handlers take the match_object as input
         self.listURLHandlers=[(URL_schedd_STATUS, self.getScheddStatus),
@@ -118,6 +107,18 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
                               (URL_schedd_SUBMIT, self.submit),
                               (URL_ANY, self.getUnrecognizedURL)]
         BaseHTTPRequestHandler.__init__(self, request, client_address, server)
+    
+    def initializeForSubmissions(self):
+        self.submitDir = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR")
+        if not self.submitDir or self.submitDir == '':
+            self.submitDir = os.path.join(os.getcwd(), "submit")
+            logging.warning('Unable to find a defined submit directory in the Condor configuration. Using directory: %s' % self.submitDir)
+        else:
+            self.submitDir = self.submitDir.replace('"', '')
+            logging.info("Retrieved submit directory '%s'" % self.submitDir)
+        if not os.path.isdir(self.submitDir):
+            logging.warning('Unabled to find submit directory %s -- attempting to create it now...' % self.submitDir)
+            os.makedirs(self.submitDir)   
     
     def requestAcceptsGZip(self):
         '''Returns True if the requestor can handle a compressed stream.
@@ -188,6 +189,8 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
         logging.debug("Response complete.")
     
     def submit(self, match_obj):
+        if not self.submitDir:
+            self.initializeForSubmissions()
         data = CondorAgent.post_submit.do_submit(self, self.submitDir)
         if not data:
             raise Exception('Encountered an unknown error submitting job, no cluster ID was returned')

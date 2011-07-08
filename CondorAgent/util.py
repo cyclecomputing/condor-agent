@@ -52,7 +52,7 @@ URL_ATTR_VALUE = re.compile('(?P<attr>.*?)=(?P<value>.*)$')
 # METHODS
 ################################################################################
 
-def getCondorConfigVal(attr, daemon='', name=''):
+def getCondorConfigVal(attr, daemon='', name='', default=None):
     '''Query Condor for a configuration value. Returns the value as a string or
     None if the value cannot be found. If the name of the attribute stars with
     CONDOR_ and cannot be found the command will also try to find the CYCLE_
@@ -84,7 +84,11 @@ def getCondorConfigVal(attr, daemon='', name=''):
     # try looking for the setting using the CYCLE_ prefix since this may be 
     # running on a scheduler with an old style configuration.
     if (not value or value == '') and cycle_attr != attr:
-        value = getCondorConfigVal(cycle_attr, daemon, name)
+        value = getCondorConfigVal(cycle_attr, daemon=daemon, name=name, default=None)
+        
+    # If the user supplied a default value return that instead of None 
+    if default and not value:
+        value = default
     
     return value
 

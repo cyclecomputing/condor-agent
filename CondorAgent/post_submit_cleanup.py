@@ -76,18 +76,18 @@ class LocalSubmitCleaner(threading.Thread):
         # TODO Should we context switch to CONDOR_IDS automatically if we're root?
         
         while not self._stopevent.isSet():
-            submitDir = util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_DIR').replace('"', '')
+            submitDir = util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_DIR', default='""').replace('"', '')
             if submitDir == '':
                 logging.error('[cleaner] Could not find a CONDOR_AGENT_SUBMIT_DIR setting for this host -- no cleanup performed')
-                return(1)
-            logging.info('[cleaner] Scanning submit directory \'%s\' for *.cluster files...' % submitDir)
-            for c in self._locate(pattern='*.cluster', root=submitDir):
-                # I never want this thread to exit because of an exception so we'll blanket trap
-                # everything at this level and just report it back as an error.
-                try:
-                    self._safeRemoveClusterFiles(c)
-                except Exception, e:
-                    logging.error('[cleaner] Caught unhandled exception: %s' % (str(e)))
+            else:
+                logging.info('[cleaner] Scanning submit directory \'%s\' for *.cluster files...' % submitDir)
+                for c in self._locate(pattern='*.cluster', root=submitDir):
+                    # I never want this thread to exit because of an exception so we'll blanket trap
+                    # everything at this level and just report it back as an error.
+                    try:
+                        self._safeRemoveClusterFiles(c)
+                    except Exception, e:
+                        logging.error('[cleaner] Caught unhandled exception: %s' % (str(e)))
             logging.info('[cleaner] Sleeping for %d seconds' % self._sleeptime)
             self._stopevent.wait(self._sleeptime)
     

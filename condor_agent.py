@@ -200,7 +200,7 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
         self.send_header('Cache-Control', 'no-cache')
         self.end_headers()
         logging.debug("Sending response body: %s" % str(data))
-        self.wfile.write("%s\n" % str(data))
+        self.wfile.write("%s" % str(data))
     
     def getUnrecognizedURL(self, match_obj):
         self.send_response(404)

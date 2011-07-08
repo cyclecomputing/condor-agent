@@ -135,7 +135,7 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
     
     # Write out a stub for this submission so the cleanup utility can find it
     # check to see if it still exists, and if not: delete the data file.
-    pfile = os.path.join(submitDir, '%s.cluster' % str(clusterId))
+    pfile = os.path.join(submitDir, '%s-%s.cluster' % (str(queue_name), str(clusterId)))
     logging.debug('Dumping pickled cluster information to %s' % pfile)
     t = { 'clusterid' : clusterId, 'queue' : queue_name, 'tmpdir' : tmpDir }
     try:

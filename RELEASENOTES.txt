@@ -1,0 +1,28 @@
+Condor Agent Release Notes
+==========================
+
+Release 1.15
+------------
+Added:
+* Committed a new RELEASENOTES.txt document to the repository, included in final packages
+
+
+Fixed:
+* Drop the mglob dependency
+  It was annoying and not overly useful. Replaced it with a glob+isfile check that does just
+  as well.
+
+* Case 7355: Encode the scheduler name in the cluster file on disk to avoid file clashes
+  Without the scheduler name included in the file name it's possible that duplicate cluster
+  IDs will occur for a multi-scheduler machine which would would mean proxy submission
+  .cluster files would clash.
+
+* Omit a \n when returning the cluster ID for a successful submission
+  The body of the response on success should just be the cluster ID, no newline
+  character required.
+
+* Ensure submission cleaner thread doesn't die
+  On startup the thread checks for CONDOR_AGENT_SUBMIT_DIR -- if this isn't defined
+  the Agent shouldn't let the cleaner thread exit. Instead it should just warn that
+  it's not doing cleanup at this point in time and sleep as it usually does.
+

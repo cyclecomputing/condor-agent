@@ -49,6 +49,7 @@ prep_build() {
     rm -rf build
     mkdir -p  $BUILD_DIR
     cp README.txt $BUILD_DIR
+    cp RELEASENOTES.txt $BUILD_DIR
 }
 
 ## Native python build

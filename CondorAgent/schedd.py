@@ -29,7 +29,7 @@ import time
 import math
 import logging
 import os
-import mglob
+import glob
 
 
 ################################################################################
@@ -88,17 +88,18 @@ class ScheddQuery:
         if len(history_file.strip()) == 0 :
             raise Exception("The HISTORY setting is an empty string")
         logging.info("History file for daemon %s: %s"%(self.scheddName, history_file))
-        files        = mglob.expand(history_file + "*")
+        files        = glob.glob(history_file + "*")
         history_data = ''
-        for file in files:
-            mod = os.path.getmtime(file)
-            # allow for some overlap when testing
-            if mod >= (completed_since - COMPLETED_SINCE_OVERLAP):
-                # each output from condor_history has a trailing newline so we can
-                # just concatenate them
-                history_data = history_data + self.getHistoryFromFile(completed_since, jobs, file)
-            else:
-                logging.info("History file %s was last modified before given completedSince, skipped" % os.path.basename(file))
+        for f in files:
+            if os.path.isfile(f):
+                mod = os.path.getmtime(f)
+                # allow for some overlap when testing
+                if mod >= (completed_since - COMPLETED_SINCE_OVERLAP):
+                    # each output from condor_history has a trailing newline so we can
+                    # just concatenate them
+                    history_data = history_data + self.getHistoryFromFile(completed_since, jobs, f)
+                else:
+                    logging.info("History file %s was last modified before given completedSince, skipped" % os.path.basename(f))
         return history_data
     
     

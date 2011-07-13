@@ -210,7 +210,9 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
     
     def handle_response(self):
         try:
+            rootdir = None
             try:
+                rootdir = os.getcwd()
                 logging.info("Received URL request: " + self.path)
                 # Strip off any URL-encoded parameters from the path
                 logging.info("Headers: \n%s" %str(self.headers).strip())
@@ -224,11 +226,20 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
             except Exception, e:
                 # we construct the response because send_error puts the whole message in the headers
                 logging.error('Caught unhandled exception: %s' % str(e))
+                try:
+                    logging.error('Current working directory: %s' % os.getcwd())
+                except Exception, e:
+                    logging.error('Unable to determine current working directory!')
                 self.send_response(500)
                 self.send_header('Content-Type', 'text/plain')
                 self.send_header('Cache-Control', 'no-cache')
                 self.end_headers()
                 self.wfile.write('Error fulfilling request:\n%s\n' % (str(e)))
+            # Always make sure we're back in our root directory
+            if rootdir:
+                os.chdir(rootdir)
+            else:
+                logging.error('Unable to determine directory where Agent was started')
         except:
             # the HTTPServer base class can hang on uncaught exceptions
             # (case 5090, BaseException does not exist until Python 2.5)
@@ -297,10 +308,11 @@ def main():
     logger.setLevel(logging.DEBUG)
     
     try:
-        logging.info("\n\nStarting CondorAgent v%s..."%__version__)
-        logging.info("Arguments: %s"%str(sys.argv))
+        logging.info("\n\nStarting CondorAgent v%s..." % __version__)
+        logging.info("Arguments: %s" % str(sys.argv))
+        logging.info('Working directory: %s' % os.getcwd())
         
-        print "Starting CondorAgent v%s...started."%__version__
+        print "Starting CondorAgent v%s...started." % __version__
         
         try:
             port = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_PORT")

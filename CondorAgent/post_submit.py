@@ -31,7 +31,6 @@ import sys
 import zipfile
 import tempfile
 import glob
-import subprocess
 import util
 import pickle
 import logging
@@ -80,8 +79,9 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
     
     # Get the zip file from the request.
     length = int(handler.headers.get('Content-length'))
-    zipname = os.path.join(tmpDir, "submit.zip")
+    zipname = os.path.join(tmpDir, "submit.zip")    
     zipfp = open(zipname, 'w')
+    logging.debug('Writing compressed submission data to %s' % zipname)
     try:
         zipfp.write(handler.rfile.read(length))
     finally:
@@ -92,10 +92,12 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
     # Now uncompress the zip file, creating any directories necessary.
     for name in submitZip.namelist():
         if name[-1] == '/':
+            logging.debug('Making new submission sub-directory %s' % os.path.join(tmpDir, name))
             os.makedirs(os.path.join(tmpDir, name))
         else:
             data = submitZip.read(name)
             fp = open(os.path.join(tmpDir, name), 'w')
+            logging.debug('Extracting file %s from submission archive %s' % (os.path.join(tmpDir, name), zipname))
             try:
                 fp.write(data)
             finally:
@@ -104,17 +106,33 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
     # Now we have a directory with the submit files in it. 
     # Ensure there is one and only one .sub or .submit file.
     submitFiles = []
+    logging.debug('Searching %s for .sub files' % tmpDir)
     for subFile in locate("*.sub", tmpDir):
         submitFiles.append(subFile)
     
+    logging.debug('Searching %s for .submit files' % tmpDir)
     for subFile in locate("*.submit", tmpDir):
         submitFiles.append(subFile)
     
+    logging.debug('Found %s .sub and .submit files in %s' % (len(submitFiles), tmpDir))
+    
     if len(submitFiles) == 0:
         # no submit files found.
+        try:
+            for s in submitFiles:
+                os.remove(s)
+            os.remove(zipname)
+        except Exception, e:
+            logging.warn('Unable to remove submission file and zip file')
         raise Exception("Zero submit files found. Submit requests must contain a submit file.")
     if len(submitFiles) > 1:
         # too many submit files found
+        try:
+            for s in submitFiles:
+                os.remove(s)
+            os.remove(zipname)
+        except Exception, e:
+            logging.warn('Unable to remove submission file and zip file')
         raise Exception("%d submit files discovered. Submit requests must contain only one submit file." % len(submitFiles))
     clusterId = doCondorSubmit(submitFiles[0], queue_name)
     

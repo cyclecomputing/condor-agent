@@ -97,6 +97,39 @@ plus the original). A job ClassAd is usually less than 4k, so this is over 5000 
 
 
 
+THE SUBMISSION PROXY
+
+The Condor Agent instance on a machine can act as a submission proxy for
+Condor jobs, allowing you to perform "remote" submissions to Condor over
+a REST-HTTP interface without having to rely on the Condor SOAP API or
+the 'condor_submit -remote' command line submission approach. This
+approach provides some of the convenience of the programmatic SOAP API
+to the Condor scheduler with some of the speed of the batch processing
+that occurs when submitting locally using the 'condor_q' command.
+
+To enable proxy submissions on a scheduling machine add the following to
+the Condor configuration on the machine:
+
+  CONDOR_AGENT_SUBMIT_PROXY = True
+  CONDOR_AGENT_SUBMIT_DIR = $(LOCAL_DIR)/submit
+
+The submission dir is local scratch space that is used for the
+submission ticket and some log stubs that Condor requires exist during
+the lifetime of the job. It should be on disk that's local to the system
+and not remote mounted. Issues with remote mounted submission scratch
+space have been reported with the beta release of this feature.
+
+To turn the feature on:
+
+  condor_restart -subsys CYCLE_AGENT
+  condor_reconfig -full -schedd
+
+If you're using CycleServer as your job submission interface it will now
+use the proxy submission API on the Agent to place jobs in to any
+scheduler running on this machine.
+
+
+
 THE REST API
 
 TODO fill in details about the REST API

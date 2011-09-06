@@ -296,7 +296,7 @@ def main():
     # Get Log directory from Condor configuration
     log_dir = CondorAgent.util.getCondorConfigVal("LOG")
     
-    if log_dir == '':
+    if not log_dir:
         log_dir = os.getcwd()
     
     # Set up Basic configuration (Python 2.3 compatible)

@@ -339,9 +339,19 @@ def main():
         
         # 1.12: Switch user context to the CONDOR_IDS user before we start polling
         # for things on the port we just opened up. Don't do this on Windows!
-        if os.name != 'nt':            
-            condor_uid = CondorAgent.util.getCondorUID()
-            condor_gid = CondorAgent.util.getCondorGID()
+        if os.name != 'nt':
+            try:
+                condor_uid = CondorAgent.util.getCondorUID()
+            except KeyError(e):
+                # Couldn't find a UID for Condor on this machine
+                logging.warning('Unable to figure out the UID to run as on this host')
+                condor_uid = None
+            try:
+                condor_gid = CondorAgent.util.getCondorGID()
+            except KeyError(e):
+                logging.warning('Unable to figure out the GID to run as on this host')
+                # Couldn't find a GID for Condor on this machine
+                condor_gid = None
             if condor_gid:
                 # This may fail if we're not running as root (maybe someone started
                 # us in the foreground?). Don't treat failure as a cause to interrupt

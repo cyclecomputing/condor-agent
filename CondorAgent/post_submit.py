@@ -80,7 +80,7 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
     # Get the zip file from the request.
     length = int(handler.headers.get('Content-length'))
     zipname = os.path.join(tmpDir, "submit.zip")    
-    zipfp = open(zipname, 'w')
+    zipfp = open(zipname, 'wb')
     logging.debug('Writing compressed submission data to %s' % zipname)
     try:
         zipfp.write(handler.rfile.read(length))

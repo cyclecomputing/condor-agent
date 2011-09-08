@@ -210,9 +210,7 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
     
     def handle_response(self):
         try:
-            rootdir = None
             try:
-                rootdir = os.getcwd()
                 logging.info("Received URL request: " + self.path)
                 # Strip off any URL-encoded parameters from the path
                 logging.info("Headers: \n%s" %str(self.headers).strip())
@@ -235,11 +233,6 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
                 self.send_header('Cache-Control', 'no-cache')
                 self.end_headers()
                 self.wfile.write('Error fulfilling request:\n%s\n' % (str(e)))
-            # Always make sure we're back in our root directory
-            if rootdir:
-                os.chdir(rootdir)
-            else:
-                logging.error('Unable to determine directory where Agent was started')
         except:
             # the HTTPServer base class can hang on uncaught exceptions
             # (case 5090, BaseException does not exist until Python 2.5)
@@ -375,7 +368,7 @@ def main():
         #logging.debug('CONDOR_AGENT_SUBMIT_PROXY = %s' % local_submission_enabled)
         if local_submission_enabled and (local_submission_enabled.lower() == 'true'):
             logging.info('Spawning sub-thread to handle local submission cleanup')
-            cleanup_thread = CondorAgent.post_submit_cleanup.LocalSubmitCleaner()
+            cleanup_thread = CondorAgent.post_submit_cleanup.LocalSubmitCleaner(sleeptime=300)
             if cleanup_thread:
                 cleanup_thread.start()
             else:

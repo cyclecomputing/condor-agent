@@ -52,7 +52,7 @@ import CondorAgent.util
 ################################################################################
 # METHODS
 ################################################################################
-def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
+def do_submit(handler, submitDir=None):
     
     logging.debug('CondorAgent.post_submit.do_submit(): handler.path: %s' % (handler.path))
     # Parse out the queue=(.*) stuff from the path. Assume it's pretty simple and regular
@@ -69,9 +69,12 @@ def do_submit(handler, submitDir=os.path.join(os.getcwd(), "submit")):
         raise Exception("Content type is not application/zip")
     
     # Copy and extract the zip file to a unique directory in our working dir.
+    if not submitDir:
+        raise Exception('Missing valid submission directory')
     if not os.path.isdir(submitDir):
-        logging.debug('CondorAgent.post_submit.do_submit(): creating submission directory \'%s\'' % submitDir)
-        os.makedirs(submitDir)
+        # Don't create it. We expect the caller to have done this if this is
+        # what they wanted to happen.
+        raise Exception('Submission directory %s does not exist' % submitDir)
         
     tmpDir = tempfile.mkdtemp(dir=submitDir)
     os.chmod(tmpDir, 0777)
@@ -177,11 +180,9 @@ def locate(pattern, root=os.curdir):
 
 
 def doCondorSubmit(submitFile, queueName):
-    currentDir = os.getcwd()
     clusterId = None
     # Change to the Condor directory
-    (basedir, filename) = os.path.split(submitFile)
-    os.chdir(basedir)
+    (submission_directory, filename) = os.path.split(submitFile)
     
     logging.debug("CondorAgent.post_submit.doCondorSubmit(): submission file: %s" % submitFile)
     # TODO: make sure condor_submit is in the path and is available.
@@ -206,8 +207,9 @@ def doCondorSubmit(submitFile, queueName):
     
     # Set the umask to be liberal so files that get created can be edited by anyone
     current_umask = os.umask(0)
+    
     try:
-        (retcode, submit_out, submit_err) = util.runCommand2(' '.join(submit_cmd))        
+        (retcode, submit_out, submit_err) = util.runCommand2(cmd=' '.join(submit_cmd), cwd=submission_directory)
     except:
         # TODO: determine exact error condition check. Possible that there are still warnings we should log.
         logging.error("CondorAgent.post_submit.doCondorSubmit(): Unexpected error: %s, %s" % (sys.exc_info()[0], str(sys.exc_info()[1])))
@@ -216,11 +218,9 @@ def doCondorSubmit(submitFile, queueName):
         if submit_err:
             logging.error("CondorAgent.post_submit.doCondorSubmit(): submit_err: %s" % submit_err)
         os.umask(current_umask)
-        os.chdir(currentDir)
-        cleanSubmissionDir(basedir)
+        cleanSubmissionDir(submission_directory)
         raise
     os.umask(current_umask)
-    os.chdir(currentDir)
     logging.debug("CondorAgent.post_submit.doCondorSubmit(): retcode:    %d" % retcode)
     logging.debug("CondorAgent.post_submit.doCondorSubmit(): submit_out: %s" % submit_out)
     logging.debug("CondorAgent.post_submit.doCondorSubmit(): submit_err: %s" % submit_err)
@@ -228,13 +228,13 @@ def doCondorSubmit(submitFile, queueName):
         match = re.search("submitted to cluster (\\d+)", submit_out)
         if match == None:
             logging.error('CondorAgent.post_submit.doCondorSubmit(): Unable to parse submission details from condor_q output')
-            cleanSubmissionDir(basedir)
+            cleanSubmissionDir(submission_directory)
             raise Exception("Failed to parse cluster id from output:\n%s" % submit_out)
         clusterId = match.group(1)
     else:
         # TODO: parse the error to figure out what happened.
         logging.error('CondorAgent.post_submit.doCondorSubmit(): Condor submission failed')
-        cleanSubmissionDir(basedir)
+        cleanSubmissionDir(submission_directory)
         raise Exception("Failed to submit jobs to condor with error:\n%s" % submit_err)
     logging.info('CondorAgent.post_submit.doCondorSubmit(): Returning cluster ID: %s' % str(clusterId))
     return clusterId

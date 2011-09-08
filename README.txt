@@ -99,41 +99,87 @@ plus the original). A job ClassAd is usually less than 4k, so this is over 5000 
 
 THE SUBMISSION PROXY
 
-The Condor Agent instance on a machine can act as a submission proxy for
-Condor jobs, allowing you to perform "remote" submissions to Condor over
-a REST-HTTP interface without having to rely on the Condor SOAP API or
-the 'condor_submit -remote' command line submission approach. This
-approach provides some of the convenience of the programmatic SOAP API
-to the Condor scheduler with some of the speed of the batch processing
-that occurs when submitting locally using the 'condor_q' command.
+The Condor Agent instance on a machine can act as a submission proxy for Condor jobs, allowing you to perform
+"remote" submissions to Condor over a REST-HTTP interface without having to rely on the Condor SOAP API or
+the 'condor_submit -remote' command line submission approach. This approach provides some of the convenience
+of the programmatic SOAP API to the Condor scheduler with some of the speed of the batch processing that
+occurs when submitting locally using the 'condor_q' command.
 
-To enable proxy submissions on a scheduling machine add the following to
-the Condor configuration on the machine:
+To enable proxy submissions on a scheduling machine add the following to the Condor configuration on the
+machine:
 
   CONDOR_AGENT_SUBMIT_PROXY = True
   CONDOR_AGENT_SUBMIT_DIR = $(LOCAL_DIR)/submit
 
-The submission dir is local scratch space that is used for the
-submission ticket and some log stubs that Condor requires exist during
-the lifetime of the job. It should be on disk that's local to the system
-and not remote mounted. Issues with remote mounted submission scratch
-space have been reported with the beta release of this feature.
+The submission dir is local scratch space that is used for the submission ticket and some log stubs that
+Condor requires exist during the lifetime of the job. It should be on disk that's local to the system
+and not remote mounted. Issues with remote mounted submission scratch space have been reported with the
+beta release of this feature.
 
 To turn the feature on:
 
   condor_restart -subsys CYCLE_AGENT
   condor_reconfig -full -schedd
 
-If you're using CycleServer as your job submission interface it will now
-use the proxy submission API on the Agent to place jobs in to any
-scheduler running on this machine.
+If you're using CycleServer as your job submission interface it will now use the proxy submission API on
+the Agent to place jobs in to any scheduler running on this machine. For information on how to access the
+submission API please see THE REST API section for the /condor/submit URL.
 
 
 
 THE REST API
 
-TODO fill in details about the REST API
 
+/condor/submit
+
+The submission API lets you perform local-type Condor submissions using a remotely-accessing HTTP interface.
+It is a much faster interface for queuing large quantities of jobs than the SOAP API that ships with
+Condor as it leverages the batching semantics inherent in condor_submit and does not need to retransmit
+data for every single job in a cluster as the SOAP API requires.
+
+The interface handles POST messages. It expects the body of the post to be of type Application/Zip and the
+payload to be a zip file that contains a single *.sub file to be used for the submission. The submission
+is performed without any modifications to the *.sub file found in the body of the POST. It is a local
+submission, so you will need to ensure that your submission file is setup accordingly.
+
+The API has one option: the queue to use on the machine for the submission. This option exists to support
+multi-schedd scenarios where more than one condor_schedd may be started on a machine at a time.
+
+Example:
+
+	This example use curl (http://curl.haxx.se/) to POST a new submission to a Linux-based
+	scheduler using the REST API.
+
+	We have a file on disk, submit.sub, that contains the following:
+	
+		universe   = vanilla
+		executable = /bin/sleep
+		arguments  = "3m"
+		# Use a network-mounted home directory as the starting and end
+		# point for the job...
+		iwd        = /net/home/condor/jobs/sleeper
+		output     = out.txt
+		error      = err.txt
+		queue 1
+	
+	We'll need to compress this file in to a zip file for transport:
+	
+		zip submit.zip submit.sub
+	
+	Now we can post it to our Condor Agent running on port 8008 on machine 'myschedd':
+	
+		CLUSTERID = `curl -X POST -H "Content-Type: application/zip" --data-binary \
+			@submit.zip "http://myschedd:8008/condor/submit?queue=myschedd`
+		
+	On success the API returns a 200 message with the new cluster ID of the submission as the body of the
+	message. In the example above this cluster ID is now stored in the environment variable	$CLUSTERID for
+	future use. On failure you'll get a 500 return code from the web server and the body of	the message will
+	contain failure analysis information showing you what went wrong with the submission.
+	
+	We can query the system for information about this job now with:
+	
+		condor_q -name myschedd $CLUSTERID	
+	
 
 
 SEE ALSO

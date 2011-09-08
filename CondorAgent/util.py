@@ -92,19 +92,19 @@ def getCondorConfigVal(attr, daemon='', name='', default=None):
     
     return value
 
-def runCommand(cmd):
+def runCommand(cmd, cwd=None):
     """Run the command and return (stdout, stderr) data"""
-    logging.info("Executing cmd: %s" % cmd)
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    logging.info('Executing cmd "%s" in "%s"'  % (cmd, cwd))
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
     #logging.debug("Created subprocess %i" % proc.pid)
     stdout_value, stderr_value = proc.communicate()
     return (stdout_value, stderr_value)
 
 
-def runCommand2(cmd):
+def runCommand2(cmd, cwd=None):
     """Similar to runCommand, but returns the returncode as well as stdout/err."""
-    logging.info("Executing cmd: %s" % cmd)
-    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    logging.info('Executing cmd "%s" in "%s"' % (cmd, cwd))
+    proc = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, cwd=cwd)
     #logging.debug("Created subprocess %i" % proc.pid)
     stdout_value, stderr_value = proc.communicate()
     return_code = proc.returncode

@@ -33,10 +33,10 @@ import re
 import shutil
 import pickle
 import glob
-import subprocess
 import util
 import logging
 import threading
+import time
 
 ################################################################################
 # GLOBALS
@@ -101,6 +101,17 @@ class LocalSubmitCleaner(threading.Thread):
         '''Check to see if a cluster is still running by loading the
         data for the cluster in cfile. If it is: return False, if it
         is not running delete the cluster data files and return True.'''
+        
+        # Don't even think of removing this cluster if the cfile isn't
+        # older than 5 minutes. This helps eliminate a race condition
+        # where jobs are submitted, the pickeled data is dumped to disk,
+        # but Condor hasn't completely processed the jobs and they aren't
+        # showing up in the queue output from condor_q yet.
+        (mode, ino, dev, nlink, uid, gid, size, atime, mtime, ctime) = os.stat(cfile)
+        if time.time() - mtime < 300:
+            logging.info('[cleaner] ...submission file %s is not old enough to be considered (mtime = %s)' % (os.path.split(cfile)[1], time.ctime(mtime)))
+            return
+        
         
         # Load the tuple that represents this cluster from cfile..
         pkl_file = open(cfile, 'rb')

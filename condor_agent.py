@@ -49,7 +49,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 ################################################################################
 # GLOBALS
 ################################################################################
-__version__ = "1.17"
+__version__ = "1.18"
 
 # URL Patterns for REST Calls
 #

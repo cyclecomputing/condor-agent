@@ -76,6 +76,11 @@ class LocalSubmitCleaner(threading.Thread):
         # TODO Should we context switch to CONDOR_IDS automatically if we're root?
         
         while not self._stopevent.isSet():
+            # Case #8236: Sleep when the cleanup thread starts. Gives the schedds a
+            # chance to start up and avoids a race condition that can delete the directories
+            # of jobs that may actually still be in the queued.
+            logging.info('[cleaner] Sleeping for %d seconds' % self._sleeptime)
+            self._stopevent.wait(self._sleeptime)            
             submitDir = util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_DIR', default='""').replace('"', '')
             if submitDir == '':
                 logging.error('[cleaner] Could not find a CONDOR_AGENT_SUBMIT_DIR setting for this host -- no cleanup performed')
@@ -88,8 +93,6 @@ class LocalSubmitCleaner(threading.Thread):
                         self._safeRemoveClusterFiles(c)
                     except Exception, e:
                         logging.error('[cleaner] Caught unhandled exception: %s' % (str(e)))
-            logging.info('[cleaner] Sleeping for %d seconds' % self._sleeptime)
-            self._stopevent.wait(self._sleeptime)
     
     def _locate(self, pattern, root=os.curdir):
         '''Locate all files matching supplied filename pattern in the

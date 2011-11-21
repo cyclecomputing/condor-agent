@@ -163,12 +163,19 @@ class LocalSubmitCleaner(threading.Thread):
             cmd = ['condor_q', '-f', '"%d\\n"', 'ClusterID', '-c', 'JobStatus != 3 && JobStatus != 4', cdata.get('clusterid')]
         logging.info('[cleaner] ...running: %s' % ' '.join(cmd))
         (return_code, stdout_value, stderr_value) = util.runCommand2(' '.join(cmd))
-        if return_code == 0:
-            # Count the lines in the output that have the cluster ID in them
-            # That's the number of jobs in the queue still.
-            repat = re.compile(r"^\s*%s\s*" % cdata.get('clusterid'), re.M)
-            matches = re.findall(repat, stdout_value)
-            jobCount = len(matches)
+        # Case #8380: Job directories are being deleted when jobs remain in the queue
+        # Pre Condor 7.2.2 it's not enough to just check the return code. Condor < 7.2.2 would often set
+        # the return code to 0 and write error notes to stderr. So we have to check that stderr is
+        # empty as well.
+        if len(stderr_value) > 0:
+            logging.error('[cleaner] ...got error running command: %s' % stderr_value)
+        else:
+            if return_code == 0:
+                # Count the lines in the output that have the cluster ID in them
+                # That's the number of jobs in the queue still.
+                repat = re.compile(r"^\s*%s\s*" % cdata.get('clusterid'), re.M)
+                matches = re.findall(repat, stdout_value)
+                jobCount = len(matches)
         return jobCount
     
 

@@ -1,6 +1,39 @@
 Condor Agent Release Notes
 ==========================
 
+Release 1.19
+------------
+Added:
+<nothing>
+
+Fixed:
+* Case #8236: Race condition in cleanup on slow Condor startup
+  An overly burdened scheduler can take a while to return jobs when it first
+  starts up, despite actually having jobs in the queue. The cleanup thread needs
+  to sleep when it first starts up so it doesn't query a scheduler in this state,
+  think it's empty, and wipe all the temporary directories of the jobs that are
+  in the scheduler's queue.
+
+
+Release 1.18
+------------
+Added:
+* detailed documentation for accessing the REST API for submissions with a nice example
+  that uses curl from the command line to do a "remote" submission via the API.
+
+Fixed:
+* Remove a race condition between submissions and the cleanup thread
+  It's possible that the submission can complete but a condor_q call for the cluster doesn't
+  show any jobs in the queue yet. Busy schedulers can get behind in their processing. This
+  change adds a pickle file mtime consideration. The cleanup thread will skip inspecting
+  clusters if their pickled data on disk is less than 5 minutes old. That's a safe buffer.
+
+* Case 7403: Submissions fail after a period of time
+  Tracked the problem down to using os.getcwd() -- this call is not thread-safe. It queries a
+  process-level global. This means a thread doing an os.chdir() can change the value that
+  *another* thread gets when it call os.getcwd().
+
+
 Release 1.15
 ------------
 Added:

@@ -1,12 +1,6 @@
 # CondorAgent
 
-	condor_agent[.exe] - A utility for accessing and extending Condor schedulers
-
-## Synopsis
-
-	condor_agent[.exe] [options]
-
-## Description
+A utility for accessing and extending Condor schedulers.
 
 CondorAgent is a program that runs beside a [Condor][condor] scheduler. It provides enhanced access to scheduler-based data and scheduler actions via a HTTP-based REST interface. The interface supports gzip compression to reduce the bandwidth needed to transfer large amounts of ClassAd data by a factor of 10-20x making this interface suitable for querying large quantities of data over slow network connections.
 

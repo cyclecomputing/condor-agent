@@ -335,13 +335,13 @@ def main():
         if os.name != 'nt':
             try:
                 condor_uid = CondorAgent.util.getCondorUID()
-            except KeyError(e):
+            except KeyError:
                 # Couldn't find a UID for Condor on this machine
                 logging.warning('Unable to figure out the UID to run as on this host')
                 condor_uid = None
             try:
                 condor_gid = CondorAgent.util.getCondorGID()
-            except KeyError(e):
+            except KeyError:
                 logging.warning('Unable to figure out the GID to run as on this host')
                 # Couldn't find a GID for Condor on this machine
                 condor_gid = None

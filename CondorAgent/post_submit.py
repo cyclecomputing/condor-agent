@@ -139,13 +139,14 @@ def do_submit(handler, submitDir=None):
         raise Exception("%d submit files discovered. Submit requests must contain only one submit file." % len(submitFiles))
     clusterId = doCondorSubmit(submitFiles[0], queue_name)
     
-    # Remove the submission files and the .zip file
+    # Remove the submission files but leave the zip file in case we need to debug
     try:
         for s in submitFiles:
             os.remove(s)
-        os.remove(zipname)
     except Exception, e:
-        logging.warn('Unable to remove submission file and zip file')
+        # Not a critical error at this point since we'll clean up this dir
+        # after the jobs have run to completion.
+        logging.warn('Unable to remove submission file')
     
     # Make sure the remaining files have open permissions
     try:

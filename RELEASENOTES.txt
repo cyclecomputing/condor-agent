@@ -1,6 +1,12 @@
 Condor Agent Release Notes
 ==========================
 
+Release 1.21
+------------
+Fixed: 
+* No longer uses /etc/condor/config as a default for Windows.
+
+
 Release 1.19
 ------------
 Added:

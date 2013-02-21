@@ -281,7 +281,8 @@ def main():
     # we need.
     if not os.environ.has_key("CONDOR_BIN_PATH"):
         os.environ["CONDOR_BIN_PATH"] = "/opt/condor/bin"
-    if not os.environ.has_key("CONDOR_CONFIG"):
+    if not os.environ.has_key("CONDOR_CONFIG") and os.name != 'nt':
+        # set this as a default, but not under Windows. (Under Windows Condor uses the registry.)
         os.environ["CONDOR_CONFIG"] = "/etc/condor/condor_config"
     if os.environ.has_key("CONDOR_BIN_PATH"):
         os.environ["PATH"] = os.environ["PATH"] + os.pathsep + os.environ["CONDOR_BIN_PATH"]

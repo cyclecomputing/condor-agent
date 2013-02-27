@@ -227,5 +227,103 @@ def getCondorUsername():
     return username
 
 
+def readCondorHistory(file, date):
+    '''Reads the file backwards until it hits the first job
+    whose date is on or before the given date. This is critical because
+    the history file is not rotated under Windows while there are any jobs
+    running, so it can get very large.  Each item returned is an instance 
+    of IncrementalAd.
 
-    
+    Note: due to a bug in the SOAP API, this is much more complicated than
+    it needs to be:   https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=1578
+
+    If jobs are removed by the SOAP API, they can be left in an
+    incomplete state.  In this case, the jobs have a CompletionDate of
+    0, and an arbitrarily early EnteredCurrentStatus if the job is
+    very old (and in fact it could be QDate if the job was idle when
+    removed).  This means we cannot stop when we find an
+    EnteredCurrentStatus that is too early, but we MUST find a way to
+    stop before processing the entire file or we will always read the
+    entire file. So this is the compromise:
+
+    When we process each job from the end of the file backwards, we
+    always output jobs if either its proper CompletionDate is later
+    than the given date or it has CompletionDate=0, and we continue
+    processing jobs until we find one whose CompletionDate is too
+    early. That indicates we are in the part of the file which is
+    earlier than we are looking for, so we are done. (No such
+    conclusion can be made about jobs which don't have CompletionDate
+    set properly.)  The worst case here is a file consisting solely of
+    a large number of removed jobs. In that case, we end up
+    re-scanning the whole file each time, until a job completes and
+    writes a proper CompletionDate.
+
+    We could work around this one bad case by doing something like
+    checking the timestamp of the file, and skipping it if it is
+    really old (say, 15 minutes old). At this point, the schedd has
+    written out everything it was going to, so we can stop processing
+    all those invalid jobs. For now we just do extra work.
+    '''
+    ad = IncrementalAd()
+    part = ''
+    offset_re = re.compile("\*\*\* .+ CompletionDate = (\d+)")
+
+    for block in reversed_blocks(file):
+        for c in reversed(block):
+            if c == '\n' and part:
+                line = part[::-1].strip()
+                part = ''
+                if line.startswith("*** "):
+                    if ad.ad:
+                        if ad.should_output(date):
+                            yield ad
+                        else:
+                            return
+
+                    ad = IncrementalAd()
+
+                else:
+                    ad.include(line)
+
+            part = part + c
+
+    if part:
+        line = part[::-1].strip()
+        ad.include(line)
+        if ad.should_output(date):
+            yield ad
+
+
+def reversed_blocks(file, blocksize=4096):
+    "Generate blocks of file's contents in reverse order."
+    file.seek(0, os.SEEK_END)
+    here = file.tell()
+    while 0 < here:
+        delta = min(blocksize, here)
+        file.seek(here - delta, os.SEEK_SET)
+        yield file.read(delta)
+        here -= delta
+
+
+class IncrementalAd:
+    def __init__(self):
+        self.ad = {}
+
+    def include(self, line):
+        # we put this in a dictionary in part because the condor history file
+        # contains duplicates that are filtered out by processing it
+        split = line.split(" = ", 1)
+        # note: we always want the latest version (there are duplicates in each job in a history file),
+        # but we are reading the file backwards so we only keep the "first" found.
+        if not split[0] in self.ad:
+            self.ad[split[0]] = split[1]
+
+    def should_output(self, date):
+        completion_time = int(self.ad.get("CompletionDate", 0))
+        return completion_time == 0 or completion_time > date
+
+    def get_text(self):
+        result = []
+        for k, v in self.ad.iteritems():
+            result.append(k + " = " + v)
+        return "\n".join(reversed(result)) + "\n"

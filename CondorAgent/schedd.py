@@ -87,6 +87,7 @@ class ScheddQuery:
         # and raise an exception.
         if len(history_file.strip()) == 0 :
             raise Exception("The HISTORY setting is an empty string")
+        history_file = os.path.normpath(history_file)
         logging.info("History file for daemon %s: %s"%(self.scheddName, history_file))
         files        = glob.glob(history_file + "*")
         history_data = ''
@@ -94,24 +95,36 @@ class ScheddQuery:
             if os.path.isfile(f):
                 mod = os.path.getmtime(f)
                 # allow for some overlap when testing
-                if mod >= (completed_since - COMPLETED_SINCE_OVERLAP):
+                # note: we don't skip the current file based on its timestamp because we don't 
+                # want to rely on that being updated properly
+                if mod >= (completed_since - COMPLETED_SINCE_OVERLAP) or os.path.normpath(f) == history_file:
                     # each output from condor_history has a trailing newline so we can
                     # just concatenate them
-                    history_data = history_data + self.getHistoryFromFile(completed_since, jobs, f)
+                    if jobs != "":
+                        history_data = history_data + self.getItemizedHistoryFromFile(completed_since, jobs, f)
+                    else:
+                        history_data = history_data + self.getHistoryFromFile(completed_since, f)
                 else:
                     logging.info("History file %s was last modified before given completedSince, skipped" % os.path.basename(f))
         return history_data
     
-    
-    def getHistoryFromFile(self, completed_since, jobs, history_file):
+    def getHistoryFromFile(self, completed_since, history_file):
+        '''Reads from the history file backwards to just get the changes.'''
+        f = open(history_file, "rb")
+        try:
+            ads = list(util.readCondorHistory(f, completed_since))
+            jobs = [ ad.get_text() for ad in reversed(ads) ]
+            logging.debug("Read %s jobs from history file %s" % (len(jobs), history_file))
+            return "\n".join(jobs)
+        finally:
+            f.close()
+
+    def getItemizedHistoryFromFile(self, completed_since, jobs, history_file):
+        '''Note: we could modify the above method to take a constraint on jobs,
+        and process the list of X.Y Z into a filter. Then we would not need to run condor_history at all.'''
         history_data = ''
         err_data     = ''
-        if jobs != "":
-            history_cmd = 'condor_history -l -f %s %s' % (history_file, jobs)
-        else:
-            # note: we use EnteredCurrentStatus because some jobs may have been removed,
-            # so they have no CompletionDate
-            history_cmd = 'condor_history -l -f %s -constraint "EnteredCurrentStatus >= %s"' % (history_file, completed_since)
+        history_cmd = 'condor_history -l -f %s %s' % (history_file, jobs)
         history_data, err_data = util.runCommand(history_cmd)
         if err_data != '':
             raise Exception("Executing condor_history command:\n%s" %err_data)

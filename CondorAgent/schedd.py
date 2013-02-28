@@ -38,9 +38,8 @@ import glob
 __doc__ = "CondorAgent Utilities for Condor: Scheduler"
 
 # the number of seconds to allow as overlap to make sure we don't miss any history,
-# both when returning a CompletedSince indicator for future reads, as well as
-# deciding what history files need to be processed
-COMPLETED_SINCE_OVERLAP = 2
+# used when deciding what history files need to be processed
+COMPLETED_SINCE_OVERLAP = 5
 
 
 ################################################################################
@@ -57,12 +56,8 @@ class ScheddQuery:
         q_data = self.getCurrent(jobs)
         
         if history:
-            # Case 5244: job history can get missed
-            # New to v1.8: get the time before the command (which we did prior to v1.5), and 
-            # also subtract an offset to make some overlap
-            completedSince = long(time.time()) - COMPLETED_SINCE_OVERLAP
-            return_time  = "-- CompletedSince: " + str(completedSince) + "\n"
-            history_data = self.getHistory(completed_since, jobs)
+            history_data, new_completed_since = self.getHistory(completed_since, jobs)
+            return_time  = "-- CompletedSince: " + str(new_completed_since) + "\n"
             data         = q_data + return_time + history_data
         else:
             data = q_data
@@ -80,6 +75,12 @@ class ScheddQuery:
     
         
     def getHistory(self, completed_since, jobs):
+        '''Returns a tuple of history, new_completed_since.  The new value for
+        completed_since comes from the last job (with a non-zero
+        CompletionDate) that was read. This ensures that the next time
+        the client reads we resume from the last value we read in the
+        file. (Previously we used the current timestamp.)'''
+        new_completed_since = completed_since
         history_file = util.getCondorConfigVal("HISTORY", "schedd", self.scheddName)
         if history_file == None:
             raise Exception("History is not enabled on this scheduler")
@@ -103,19 +104,30 @@ class ScheddQuery:
                     if jobs != "":
                         history_data = history_data + self.getItemizedHistoryFromFile(completed_since, jobs, f)
                     else:
-                        history_data = history_data + self.getHistoryFromFile(completed_since, f)
+                        new_data, new_time = self.getHistoryFromFile(completed_since, f)
+                        # keep the latest we've seen
+                        new_completed_since = max(new_time, new_completed_since)
+                        logging.debug("New CompletedSince: %s" % new_completed_since)
+                        history_data = history_data + new_data
                 else:
                     logging.info("History file %s was last modified before given completedSince, skipped" % os.path.basename(f))
-        return history_data
+        return (history_data, new_completed_since)
     
     def getHistoryFromFile(self, completed_since, history_file):
-        '''Reads from the history file backwards to just get the changes.'''
+        '''Reads from the history file backwards to just get the changes.
+        Returns the text and the latest non-zero CompletionDate found.'''
         f = open(history_file, "rb")
         try:
             ads = list(util.readCondorHistory(f, completed_since))
-            jobs = [ ad.get_text() for ad in reversed(ads) ]
+            jobs = []
+            max_completion = 0
+            for job in reversed(ads):
+                jobs.append(job.get_text())
+                # CompletionDate may not be specified, or may appear as 0, both of which are ignored
+                max_completion = max(job.ad.get("CompletionDate", 0), max_completion)
+
             logging.debug("Read %s jobs from history file %s" % (len(jobs), history_file))
-            return "\n".join(jobs)
+            return ("\n".join(jobs), max_completion)
         finally:
             f.close()
 

@@ -296,11 +296,14 @@ def readCondorHistory(file, date):
 
 def reversed_blocks(file, blocksize=4096):
     "Generate blocks of file's contents in reverse order."
-    file.seek(0, os.SEEK_END)
+    # Python 2.4 compatibility: use the numeric value for os.SEEK_*
+    SEEK_SET = 0 # os.SEEK_SET
+    SEEK_END = 2 # os.SEEK_END
+    file.seek(0, SEEK_END)
     here = file.tell()
     while 0 < here:
         delta = min(blocksize, here)
-        file.seek(here - delta, os.SEEK_SET)
+        file.seek(here - delta, SEEK_SET)
         yield file.read(delta)
         here -= delta
 

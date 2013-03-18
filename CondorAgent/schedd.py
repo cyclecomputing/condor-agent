@@ -127,7 +127,7 @@ class ScheddQuery:
                 max_completion = max(job.ad.get("CompletionDate", 0), max_completion)
 
             logging.debug("Read %s jobs from history file %s" % (len(jobs), history_file))
-            return ("\n".join(jobs), max_completion)
+            return ("\n".join(jobs) + "\n", max_completion)
         finally:
             f.close()
 

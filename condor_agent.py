@@ -33,6 +33,7 @@ import exceptions
 import re
 import logging
 import logging.handlers
+import signal
 import time
 import SocketServer
 import zlib
@@ -275,7 +276,17 @@ class Shutdown:
 def main():
     '''The main method that drives the daemon. Starts an infinite loop that handles
     requests and responses to HTTP-based REST calls.'''
-    
+
+    def cleanShutdown(signal, frame):
+        '''A method to handle shutdowns. This is necessary to prevent the agent from
+        hanging on a HTCondor shutdown, since the shutdown script sends SIGQUIT
+        instead of SIGTERM.'''
+ 
+        logging.info('Received signal %i, shutting down server' % signal)
+        print 'Received signal %i, shutting down server' % signal
+        server.socket.close()
+        sys.exit(0)
+
     # We need access to the Condor binaries on this machine in order to complete
     # requests and return data. Set up the PATH so we have access to the things
     # we need.
@@ -331,6 +342,10 @@ def main():
         server = ThreadedHTTPServer(('', port), CondorAgentHandler)
         logging.info("Created web server at port %d" % port)
         
+        # Capture SIGINT and SIGQUIT
+        signal.signal(signal.SIGINT,cleanShutdown)
+        signal.signal(signal.SIGQUIT,cleanShutdown)
+            
         # 1.12: Switch user context to the CONDOR_IDS user before we start polling
         # for things on the port we just opened up. Don't do this on Windows!
         if os.name != 'nt':
@@ -384,13 +399,9 @@ def main():
         # wait for the shutdown request to finish cleanly
         time.sleep(0.5)
     
-    except KeyboardInterrupt:
-        logging.info('^C received, shutting down server')
-        print '^C received, shutting down server'
-        server.socket.close()
     except Exception, e:
         logging.error(e)
-    
+
     logging.info("Server shutdown")
 
 

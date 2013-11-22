@@ -19,5 +19,5 @@
 ################################################################################
 
 DIR=`dirname $0`
-python $DIR/condor_agent.py
+exec python $DIR/condor_agent.py
 

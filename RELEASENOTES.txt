@@ -1,6 +1,15 @@
 Condor Agent Release Notes
 ==========================
 
+Release 1.25
+------------
+Added:
+<nothing>
+
+Fixed:
+* Case #5157: The bash script wrapper for condor_agent.py no longer blocks SIGQUIT, which
+  prevents the agent from stopping HTCondor shutdown.
+
 Release 1.21
 ------------
 Fixed: 

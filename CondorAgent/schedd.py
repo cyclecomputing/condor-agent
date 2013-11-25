@@ -1,6 +1,6 @@
 ###### COPYRIGHT NOTICE ########################################################
 #
-# Copyright (C) 2007-2011, Cycle Computing, LLC.
+# Copyright (C) 2007-2013, Cycle Computing, LLC.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License"); you
 # may not use this file except in compliance with the License.  You may
@@ -84,6 +84,9 @@ class ScheddQuery:
         history_file = util.getCondorConfigVal("HISTORY", "schedd", self.scheddName)
         if history_file == None:
             raise Exception("History is not enabled on this scheduler")
+        # Case 5416: HISTORY should be a file, not a directory
+	if os.path.isdir(history_file) :
+            raise Exception("The HISTORY setting is a directory")
         # Case 5458: Consider an empty string value for HISTORY to be the same as None
         # and raise an exception.
         if len(history_file.strip()) == 0 :

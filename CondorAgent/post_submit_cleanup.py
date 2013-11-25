@@ -3,7 +3,7 @@
 
 ###### COPYRIGHT NOTICE ########################################################
 #
-# Copyright (C) 2007-2011, Cycle Computing, LLC.
+# Copyright (C) 2007-2013, Cycle Computing, LLC.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License"); you
 # may not use this file except in compliance with the License.  You may

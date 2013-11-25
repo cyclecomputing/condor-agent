@@ -9,6 +9,9 @@ Added:
 Fixed:
 * Case #5157: The bash script wrapper for condor_agent.py no longer blocks SIGQUIT, which
   prevents the agent from stopping HTCondor shutdown.
+* Case #5416: HTCondor expects the HISTORY value to be a file, not a directory, so the agent will
+  now only check files for job history. This prevents performance impacts when HISTORY is 
+  accidentally defined to be the same as LOG (or other directory with numerous/large files).
 
 Release 1.21
 ------------

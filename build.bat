@@ -2,7 +2,7 @@
 
 REM ###### COPYRIGHT NOTICE ########################################################
 REM #
-REM # Copyright (C) 2007-2011, Cycle Computing, LLC.
+REM # Copyright (C) 2007-2013, Cycle Computing, LLC.
 REM # 
 REM # Licensed under the Apache License, Version 2.0 (the "License"); you
 REM # may not use this file except in compliance with the License.  You may

@@ -127,7 +127,7 @@ We can query the system for information about this job now with:
 
 ## Copyright
 
-Copyright (C) 2007-2012, Cycle Computing, LLC.
+Copyright (C) 2007-2013, Cycle Computing, LLC.
 
 ## License
 

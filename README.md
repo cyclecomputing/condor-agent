@@ -8,8 +8,8 @@ CondorAgent is deployed as either a shell script wrapped Python program (which r
 
 ## Download
 
-* [Windows][https://s3.amazonaws.com/download.cyclecomputing.com/condor-agent/condor_agent-1.25-win32.zip]
-* [other OSes][https://s3.amazonaws.com/download.cyclecomputing.com/condor-agent/condor_agent-1.25-python.tar.gz]
+* [Windows](https://s3.amazonaws.com/download.cyclecomputing.com/condor-agent/condor_agent-1.25-win32.zip)
+* [other OSes](https://s3.amazonaws.com/download.cyclecomputing.com/condor-agent/condor_agent-1.25-python.tar.gz)
 
 ## Options
 

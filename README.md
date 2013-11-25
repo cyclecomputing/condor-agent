@@ -1,8 +1,8 @@
 # CondorAgent
 
-A utility for accessing and extending Condor schedulers.
+A utility for accessing and extending HTCondor schedulers.
 
-CondorAgent is a program that runs beside a [Condor][condor] scheduler. It provides enhanced access to scheduler-based data and scheduler actions via a HTTP-based REST interface. The interface supports gzip compression to reduce the bandwidth needed to transfer large amounts of ClassAd data by a factor of 10-20x making this interface suitable for querying large quantities of data over slow network connections.
+CondorAgent is a program that runs beside a [HTCondor][condor] scheduler. It provides enhanced access to scheduler-based data and scheduler actions via a HTTP-based REST interface. The interface supports gzip compression to reduce the bandwidth needed to transfer large amounts of ClassAd data by a factor of 10-20x making this interface suitable for querying large quantities of data over slow network connections.
 
 CondorAgent is deployed as either a shell script wrapped Python program (which requires Python 2.4 or greater) or as a Windows binary (which does not require a local Python installation).
 
@@ -13,11 +13,11 @@ CondorAgent is deployed as either a shell script wrapped Python program (which r
 
 ## Options
 
-There are no command line options at present for this tool. All configuration and control of CondorAgent is done via Condor configuration settings. Please see the section *CONDOR CONFIGURATION* for more information on installing and configuring CondorAgent.
+There are no command line options at present for this tool. All configuration and control of CondorAgent is done via HTCondor configuration settings. Please see the section *CONDOR CONFIGURATION* for more information on installing and configuring CondorAgent.
 
-## Condor Configuration
+## HTCondor Configuration
 
-To enable the CondorAgent on a scheduler, extract the appropriate CondorAgent package into Condor's sbin directory (or the bin directory for a Windows installation). Add the following to your local Condor configuration file to register CondorAgent as a daemon the condor_master process on this machine will monitor and control:
+To enable the CondorAgent on a scheduler, extract the appropriate CondorAgent package into HTCondor's sbin directory (or the bin directory for a Windows installation). Add the following to your local HTCondor configuration file to register CondorAgent as a daemon the condor_master process on this machine will monitor and control:
 
 	CONDOR_AGENT = $(SBIN)/condor_agent/condor_agent
 	CONDOR_AGENT_ENVIRONMENT = "CONDOR_BIN_PATH=$(BIN)"
@@ -30,9 +30,9 @@ If running on Windows the `CONDOR_AGENT` line should reference condor_agent.exe 
 
 Note that the `CONDOR_AGENT_SUBMIT_DIR` directory can be any directory on disk into which the job files can  be written. The above is only a suggested default location. If you do not intend to do submissions over the REST interface with this CondorAgent installation you can omit this setting.
 
-When making changes to CondorAgent configuration settings it is important to remember to reconfigure all the Condor daemons on the machine, otherwise the CondorAgent won't see config changes made in the files.
+When making changes to CondorAgent configuration settings it is important to remember to reconfigure all the HTCondor daemons on the machine, otherwise the CondorAgent won't see config changes made in the files.
 
-Reconfigure this Condor installation:
+Reconfigure this HTCondor installation:
 
 	condor_reconfig -full
 
@@ -51,14 +51,14 @@ You can verify the agent is running on this box using curl:
 
 This should return output similar to a `condor_q -l` call.
 
-If you're running a [CycleServer][cycleserver] instance version 4.0.3 or earlier you will need to add some additional Condor configuration in order for CycleServer to detect the agent's presence on this scheduling node and being to fetch job and history information from this node using the CondorAgent after two polling intervals have completed.
+If you're running a [CycleServer][cycleserver] instance version 4.0.3 or earlier you will need to add some additional HTCondor configuration in order for CycleServer to detect the agent's presence on this scheduling node and being to fetch job and history information from this node using the CondorAgent after two polling intervals have completed.
 
 Add the following configuration in the case where CycleServer is in use:
 
 	CYCLE_AGENT_PORT = $(CONDOR_AGENT_PORT)
 	SCHEDD_ATTRS = CYCLE_AGENT_PORT, $(SCHEDD_ATTRS)
 
-To enable access to historical job information via CondorAgent we recommend the following Condor settings:
+To enable access to historical job information via CondorAgent we recommend the following HTCondor settings:
 
 	HISTORY = $(SPOOL)/history
 	ENABLE_HISTORY_ROTATION = True
@@ -69,14 +69,14 @@ This will ensure that the history log files stay reasonable small and provide ab
 
 ## The Submission Proxy
 
-The CondorAgent instance on a machine can act as a submission proxy for Condor jobs, allowing you to perform "remote" submissions to Condor over a REST-HTTP interface without having to rely on the Condor SOAP API or the `condor_submit -remote` command line submission approach. This approach provides some of the convenience of the programmatic SOAP API to the Condor scheduler with some of the speed of the batch processing that occurs when submitting locally using the `condor_q` command.
+The CondorAgent instance on a machine can act as a submission proxy for HTCondor jobs, allowing you to perform "remote" submissions to HTCondor over a REST-HTTP interface without having to rely on the HTCondor SOAP API or the `condor_submit -remote` command line submission approach. This approach provides some of the convenience of the programmatic SOAP API to the HTCondor scheduler with some of the speed of the batch processing that occurs when submitting locally using the `condor_q` command.
 
-To enable proxy submissions on a scheduling machine add the following to the Condor configuration on the machine:
+To enable proxy submissions on a scheduling machine add the following to the HTCondor configuration on the machine:
 
 	CONDOR_AGENT_SUBMIT_PROXY = True
 	CONDOR_AGENT_SUBMIT_DIR = $(LOCAL_DIR)/submit
 
-The submission dir is local scratch space that is used for the submission ticket and some log stubs that Condor requires exist during the lifetime of the job. It should be on disk that's local to the system and not remote mounted. Issues with remote mounted submission scratch space have been reported with the beta release of this feature.
+The submission dir is local scratch space that is used for the submission ticket and some log stubs that HTCondor requires exist during the lifetime of the job. It should be on disk that's local to the system and not remote mounted. Issues with remote mounted submission scratch space have been reported with the beta release of this feature.
 
 To turn the feature on:
 
@@ -89,7 +89,7 @@ If you're using CycleServer as your job submission interface it will now use the
 
 ### /condor/submit
 
-The submission API lets you perform local-type Condor submissions using a remotely-accessing HTTP interface. It is a much faster interface for queuing large quantities of jobs than the SOAP API that ships with Condor as it leverages the batching semantics inherent in `condor_submit` and does not need to retransmit data for every single job in a cluster as the SOAP API requires.
+The submission API lets you perform local-type HTCondor submissions using a remotely-accessing HTTP interface. It is a much faster interface for queuing large quantities of jobs than the SOAP API that ships with HTCondor as it leverages the batching semantics inherent in `condor_submit` and does not need to retransmit data for every single job in a cluster as the SOAP API requires.
 
 The interface handles POST messages. It expects the body of the post to be of type Application/Zip and the payload to be a zip file that contains a single *.sub file to be used for the submission. The submission is performed without any modifications to the *.sub file found in the body of the POST. It is a local submission, so you will need to ensure that your submission file is setup accordingly.
 
@@ -127,7 +127,7 @@ We can query the system for information about this job now with:
 	
 ## See Also
 
-* [Condor][condor] - high throughput computing from the University of Wisconsin
+* [HTCondor][condor] - high throughput computing from the University of Wisconsin
 * [curl][] - a command line tool for transferring data with URL syntax
 
 ## Copyright

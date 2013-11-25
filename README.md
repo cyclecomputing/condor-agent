@@ -6,6 +6,11 @@ CondorAgent is a program that runs beside a [Condor][condor] scheduler. It provi
 
 CondorAgent is deployed as either a shell script wrapped Python program (which requires Python 2.4 or greater) or as a Windows binary (which does not require a local Python installation).
 
+## Download
+
+* [Windows][https://s3.amazonaws.com/download.cyclecomputing.com/condor-agent/condor_agent-1.25-win32.zip]
+* [other OSes][https://s3.amazonaws.com/download.cyclecomputing.com/condor-agent/condor_agent-1.25-python.tar.gz]
+
 ## Options
 
 There are no command line options at present for this tool. All configuration and control of CondorAgent is done via Condor configuration settings. Please see the section *CONDOR CONFIGURATION* for more information on installing and configuring CondorAgent.

@@ -344,7 +344,8 @@ def main():
         
         # Capture SIGINT and SIGQUIT
         signal.signal(signal.SIGINT,cleanShutdown)
-        signal.signal(signal.SIGQUIT,cleanShutdown)
+        if os.name != 'nt':
+            signal.signal(signal.SIGQUIT,cleanShutdown)
             
         # 1.12: Switch user context to the CONDOR_IDS user before we start polling
         # for things on the port we just opened up. Don't do this on Windows!

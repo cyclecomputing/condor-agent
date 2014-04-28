@@ -1,6 +1,17 @@
 Condor Agent Release Notes
 ==========================
 
+Release 1.26
+------------
+Added:
+<nothing>
+
+Fixed:
+* Case #13400: Fixed a bug introduced in 1.25 where condor_agent.py would try to register a handler
+  for SIGQUIT on Windows. Windows does not support that signal, so now only non-Windows operating
+  systems will attempt to handle SIGQUIT.
+
+
 Release 1.25
 ------------
 Added:

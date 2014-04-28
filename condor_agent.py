@@ -2,7 +2,7 @@
 
 ###### COPYRIGHT NOTICE ########################################################
 #
-# Copyright (C) 2007-2013, Cycle Computing, LLC.
+# Copyright (C) 2007-2014, Cycle Computing, LLC.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License"); you
 # may not use this file except in compliance with the License.  You may
@@ -50,7 +50,7 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 ################################################################################
 # GLOBALS
 ################################################################################
-__version__ = "1.25"
+__version__ = "1.26"
 
 # URL Patterns for REST Calls
 #

@@ -1,5 +1,5 @@
 Condor Agent
-Copyright (C) 2007-2013 Cycle Computing, LLC.
+Copyright (C) 2007-2014 Cycle Computing, LLC.
 
 This source code is covered by the Apache License, Version 2.0, which
 can be found in the accompanying LICENSE-2.0.txt file, or online at

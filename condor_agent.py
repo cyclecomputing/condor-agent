@@ -336,7 +336,7 @@ def main():
             from CondorAgent import win32
             win32.setupShutdownHook(shutdown.shutdown)
         
-        print "Waiting for incoming requests on post %d (press ^C to stop)..." % port
+        print "Waiting for incoming requests on port %d (press ^C to stop)..." % port
         
         # Start web service interface
         server = ThreadedHTTPServer(('', port), CondorAgentHandler)

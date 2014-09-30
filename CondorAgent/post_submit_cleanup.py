@@ -124,6 +124,13 @@ class LocalSubmitCleaner(threading.Thread):
         # clusterid
         # queue
         # tmpdir
+
+        # Is it possible that the clusterID doesn't exist but the rest of the data does? Maybe, but
+        # let's guard against it just in case.
+        if cdata.get('clusterid', 'None') == 'None' or cdata.get('clusterid', 'None') == '':
+            logging.warning('[cleaner] No cluster ID in file %s' % cfile)
+            return
+
         logging.info('[cleaner] Checking cluster %s for jobs in queue %s...' % (cdata.get('clusterid', 'Unknown'), cdata.get('queue', 'localhost')))
         jobsInQueue = self._condorJobsInQueue(cdata)
         if jobsInQueue == 0:

@@ -78,6 +78,10 @@ To enable proxy submissions on a scheduling machine add the following to the HTC
 
 The submission dir is local scratch space that is used for the submission ticket and some log stubs that HTCondor requires exist during the lifetime of the job. It should be on disk that's local to the system and not remote mounted. Issues with remote mounted submission scratch space have been reported with the beta release of this feature.
 
+By default, the CondorAgent will remove the scratch directories when a submission no longer has jobs in the queue (completed and removed jobs are ignored). This can be disabled by setting:
+
+	CONDOR_AGENT_SKIP_CLEANUP = True
+
 To turn the feature on:
 
 	condor_restart -subsys CYCLE_AGENT

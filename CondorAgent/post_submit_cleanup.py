@@ -84,6 +84,8 @@ class LocalSubmitCleaner(threading.Thread):
             submitDir = util.getCondorConfigVal('CONDOR_AGENT_SUBMIT_DIR', default='""').replace('"', '')
             if submitDir == '':
                 logging.error('[cleaner] Could not find a CONDOR_AGENT_SUBMIT_DIR setting for this host -- no cleanup performed')
+            elif util.getCondorConfigVal('CONDOR_AGENT_SKIP_CLEANUP', default=False):
+                logging.info('[cleaner] CONDOR_AGENT_SKIP_CLEANUP is True. Skipping cleanup')
             else:
                 logging.info('[cleaner] Scanning submit directory \'%s\' for *.cluster files...' % submitDir)
                 for c in self._locate(pattern='*.cluster', root=submitDir):

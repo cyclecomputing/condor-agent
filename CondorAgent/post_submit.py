@@ -246,6 +246,11 @@ def cleanSubmissionDir(submission_dir):
     so bad. Does some minimal checking on submission_dir to make sure it
     does not do something stupid like delete / or something like that.
     '''
+    # Check if cleanup is disabled
+    if util.getCondorConfigVal('CONDOR_AGENT_SKIP_CLEANUP', default=False):
+        logging.warn('CONDOR_AGENT_SKIP_CLEANUP is true. Not cleaning failed submission.')
+        return
+
     submit_dir_expected_prefix = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_SUBMIT_DIR").replace('"', '')
     if submit_dir_expected_prefix and submit_dir_expected_prefix != '' and len(submit_dir_expected_prefix) > 3:
         # That's a bit of a lame check, >3 -- it could be better. On !Windows it should suffice to

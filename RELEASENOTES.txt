@@ -1,6 +1,17 @@
 Condor Agent Release Notes
 ==========================
 
+Release 1.27
+------------
+Added:
+* Scratch directory cleanup can be disabled by setting the HTCondor configuration attribute
+  CONDOR_AGENT_SKIP_CLEANUP to True
+
+Fixed:
+
+* Issue #1: Fixed a bug where a scratch directory could get deleted inadvertently if the clusterID
+  was not properly written to the .submit file.
+
 Release 1.26
 ------------
 Added:

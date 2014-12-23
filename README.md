@@ -13,7 +13,7 @@ CondorAgent is deployed as either a shell script wrapped Python program (which r
 
 ## Options
 
-There are no command line options at present for this tool. All configuration and control of CondorAgent is done via HTCondor configuration settings. Please see the section *CONDOR CONFIGURATION* for more information on installing and configuring CondorAgent.
+There are no command line options at present for this tool. All configuration and control of CondorAgent is done via HTCondor configuration settings. Please see the section *HTCONDOR CONFIGURATION* for more information on installing and configuring CondorAgent.
 
 ## HTCondor Configuration
 
@@ -29,6 +29,16 @@ To enable the CondorAgent on a scheduler, extract the appropriate CondorAgent pa
 If running on Windows the `CONDOR_AGENT` line should reference condor_agent.exe instead of condor_agent.
 
 Note that the `CONDOR_AGENT_SUBMIT_DIR` directory can be any directory on disk into which the job files can  be written. The above is only a suggested default location. If you do not intend to do submissions over the REST interface with this CondorAgent installation you can omit this setting.
+
+The log settings are configurable as well:
+	# The log file name (not a full path)
+	CONDOR_AGENT_LOG = CondorAgentLog
+	# The log level (one of "debug", "info", "warning", "error", "critical")
+	CONDOR_AGENT_DEBUG = debug
+	# The maximum size of the log (in megabytes)
+	MAX_CONDOR_AGENT_LOG = 10485760
+	# The number of old log files to keep
+	MAX_NUM_CONDOR_AGENT_LOG = 1
 
 When making changes to CondorAgent configuration settings it is important to remember to reconfigure all the HTCondor daemons on the machine, otherwise the CondorAgent won't see config changes made in the files.
 

@@ -304,13 +304,33 @@ def main():
     if not log_dir:
         log_dir = os.getcwd()
     
+    # Get Log file name from Condor configuration
+    log_file = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_LOG", default="CondorAgentLog")
+
+    # Get the maximum log size from Condor configuration
+    log_max_size = int(CondorAgent.util.getCondorConfigVal("MAX_CONDOR_AGENT_LOG", default=10*1024*1024))
+
+    # Get the maximum number of log files
+    log_max_num = int(CondorAgent.util.getCondorConfigVal("MAX_NUM_CONDOR_AGENT_LOG", default=1))
+
+    # Get the log level
+    LEVELS = { 'debug':logging.DEBUG,
+            'info':logging.INFO,
+            'warning':logging.WARNING,
+            'error':logging.ERROR,
+            'critical':logging.CRITICAL,
+            }
+    log_level_string = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_DEBUG", default="INFO")
+    print "log_level_string = " + log_level_string
+    log_level = LEVELS.get(log_level_string.lower())
+
     # Set up Basic configuration (Python 2.3 compatible)
     logger    = logging.getLogger()
-    hdlr      = logging.handlers.RotatingFileHandler(os.path.join(log_dir.strip(), "CondorAgentLog"), maxBytes=20*1024*1024, backupCount=3)
+    hdlr      = logging.handlers.RotatingFileHandler(os.path.join(log_dir.strip(), log_file), maxBytes=log_max_size, backupCount=log_max_num)
     formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
     hdlr.setFormatter(formatter)
     logger.addHandler(hdlr)
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(log_level)
     
     try:
         logging.info("\n\nStarting CondorAgent v%s..." % __version__)

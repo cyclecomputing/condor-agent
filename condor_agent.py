@@ -321,7 +321,6 @@ def main():
             'critical':logging.CRITICAL,
             }
     log_level_string = CondorAgent.util.getCondorConfigVal("CONDOR_AGENT_DEBUG", default="INFO")
-    print "log_level_string = " + log_level_string
     log_level = LEVELS.get(log_level_string.lower())
 
     # Set up Basic configuration (Python 2.3 compatible)

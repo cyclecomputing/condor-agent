@@ -2,7 +2,7 @@
 
 ###### COPYRIGHT NOTICE ########################################################
 #
-# Copyright (C) 2007-2014, Cycle Computing, LLC.
+# Copyright (C) 2007-2017, Cycle Computing, LLC.
 # 
 # Licensed under the Apache License, Version 2.0 (the "License"); you
 # may not use this file except in compliance with the License.  You may
@@ -50,16 +50,15 @@ from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 ################################################################################
 # GLOBALS
 ################################################################################
-__version__ = "1.27"
+__version__ = "1.28"
 
 # URL Patterns for REST Calls
 #
 # We're using regular expressions for URL pattern matching, not because we want
 # to, but because we have to in order to be cross-Python version compatible.
-# Most modern, RHEL-based, Linux distros ship with antiquated Python 2.4 and we
+# Older, RHEL-based, Linux distros ship with antiquated Python 2.4 and we
 # like to be compatible with that version, as well as 2.6 and up. If there's a
-# better way to do this that isn't RE-based, we should move to that ASAP. Or
-# Linux could stop depending on 2.4...which ever comes first.
+# better way to do this that isn't RE-based, we should move to that ASAP. 
 
 # condor_submit URLs
 
@@ -224,7 +223,7 @@ class CondorAgentHandler(BaseHTTPRequestHandler):
                     
             except Exception, e:
                 # we construct the response because send_error puts the whole message in the headers
-                logging.error('Caught unhandled exception: %s' % str(e))
+                logging.exception('Caught unhandled exception: %s' % str(e))
                 try:
                     logging.error('Current working directory: %s' % os.getcwd())
                 except Exception, e:
@@ -423,7 +422,7 @@ def main():
         time.sleep(0.5)
     
     except Exception, e:
-        logging.error(e)
+        logging.exception(e)
 
     logging.info("Server shutdown")
 

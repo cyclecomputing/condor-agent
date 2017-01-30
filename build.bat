@@ -2,7 +2,7 @@
 
 REM ###### COPYRIGHT NOTICE ########################################################
 REM #
-REM # Copyright (C) 2007-2014, Cycle Computing, LLC.
+REM # Copyright (C) 2007-2017, Cycle Computing, LLC.
 REM # 
 REM # Licensed under the Apache License, Version 2.0 (the "License"); you
 REM # may not use this file except in compliance with the License.  You may
@@ -22,7 +22,7 @@ REM This creates the EXE, which must be done on Windows, so it is checked in.
 REM Run build.sh on Unix after running this on Windows to create the packages.
 
 del dist\condor_agent.exe
-setup.py py2exe
+pyinstaller condor_agent.spec
 
 echo.
 echo.

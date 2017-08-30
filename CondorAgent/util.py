@@ -307,6 +307,16 @@ def reversed_blocks(file, blocksize=4096):
         yield file.read(delta)
         here -= delta
 
+def getCondorVersion():
+    output = subprocess.check_output("condor_version")
+    condorMatch = re.compile('\$CondorVersion: (?P<version>\d+\.\d+\.\d+) ')
+    condor_version = condorMatch.match(output).group('version')
+
+    if not os.environ.has_key("CONDOR_VERSION"):
+        os.environ["CONDOR_VERSION"] = condor_version
+    if not os.environ.has_key("CONDOR_MAJOR_VERSION"):
+        os.environ["CONDOR_MAJOR_VERSION"] = ".".join(condor_version.split('.')[:2])
+
 
 class IncrementalAd:
     def __init__(self):

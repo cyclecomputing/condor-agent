@@ -77,6 +77,11 @@ To enable access to historical job information via CondorAgent we recommend the 
 
 This will ensure that the history log files stay reasonable small and provide about 20-24MB of history (5 backups plus the original). A job ClassAd is usually less than 4k, so this is over 5000 jobs.
 
+In the event Condor is upgraded to a different version, remember to restart the condor-agent:
+
+  condor_off -daemon CONDOR_AGENT
+  condor_on -daemon CONDOR_AGENT
+
 ## The Submission Proxy
 
 The CondorAgent instance on a machine can act as a submission proxy for HTCondor jobs, allowing you to perform "remote" submissions to HTCondor over a REST-HTTP interface without having to rely on the HTCondor SOAP API or the `condor_submit -remote` command line submission approach. This approach provides some of the convenience of the programmatic SOAP API to the HTCondor scheduler with some of the speed of the batch processing that occurs when submitting locally using the `condor_q` command.

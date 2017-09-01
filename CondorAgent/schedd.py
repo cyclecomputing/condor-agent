@@ -65,7 +65,10 @@ class ScheddQuery:
     
     def getCurrent(self, jobs):
         # Get results from condor_q
-        q_cmd = 'condor_q -name %s -long %s' % (self.scheddName, jobs)
+        if os.environ.has_key("CONDOR_MAJOR_VERSION") and float(os.environ["CONDOR_MAJOR_VERSION"]) >= 8.5:
+            q_cmd = 'condor_q -allusers -name %s -long %s' % (self.scheddName, jobs)
+        else:
+            q_cmd = 'condor_q -name %s -long %s' % (self.scheddName, jobs)
         logging.info("condor_q command: %s" %q_cmd)
         q_data, err_data = util.runCommand(q_cmd)
         if err_data != '':
